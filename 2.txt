@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حاسبة مصنع الورق</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #1a1b26;
+            color: #a9b1d6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            color: #7aa2f7;
+            margin-bottom: 30px;
+        }
+        .card {
+            background-color: #24283b;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .card-header {
+            color: #9ece6a;
+            border-bottom: 2px solid #414868;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 8px;
+            color: #c0caf5;
+            font-weight: bold;
+        }
+        input {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #414868;
+            background-color: #1f2335;
+            color: #c0caf5;
+            font-family: inherit;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #7aa2f7;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .result-box {
+            background-color: #1f2335;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #bb9af7;
+        }
+        .result-box span {
+            display: block;
+            color: #7dcfff;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .result-box strong {
+            font-size: 20px;
+            color: #ff9e64;
+        }
+        .deficit-red {
+            color: #f7768e !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏭 نظام إدارة وحسابات الورق</h1>
+
+    <!-- القسم الأول -->
+    <div class="card">
+        <h2 class="card-header">1. من عدد الأفرخ إلى الوزن</h2>
+        <div class="grid">
+            <div class="input-group">
+                <label>عدد الأفرخ المطلوب:</label>
+                <input type="number" id="t1-sheets" value="3000">
+            </div>
+            <div class="input-group">
+                <label>الجرام (GSM):</label>
+                <input type="number" id="t1-gsm" value="70">
+            </div>
+            <div class="input-group">
+                <label>المقاس 1 (سم):</label>
+                <input type="number" id="t1-dim1" value="70">
+            </div>
+            <div class="input-group">
+                <label>المقاس 2 (سم):</label>
+                <input type="number" id="t1-dim2" value="100">
+            </div>
+            <div class="input-group">
+                <label>وزن البكرة (كجم):</label>
+                <input type="number" id="t1-roll" value="500">
+            </div>
+            <div class="input-group">
+                <label>سعة البالتة (فرخ):</label>
+                <input type="number" id="t1-pallet" value="10000">
+            </div>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-box">
+                <span>الوزن الصافي</span>
+                <strong id="res1-net">0 كجم</strong>
+            </div>
+            <div class="result-box">
+                <span>الوزن بالهالك (3%)</span>
+                <strong id="res1-waste">0 كجم</strong>
+            </div>
+            <div class="result-box">
+                <span>عدد البكر المطلوب</span>
+                <strong id="res1-rolls">0 بكرة</strong>
+            </div>
+            <div class="result-box">
+                <span>عدد البالتات</span>
+                <strong id="res1-pallets">0 بالتة</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- القسم الثاني -->
+    <div class="card">
+        <h2 class="card-header">2. الأفرخ المتوقعة من وزن البكرة</h2>
+        <div class="grid">
+            <div class="input-group">
+                <label>وزن البكرة (كجم):</label>
+                <input type="number" id="t2-roll" value="500">
+            </div>
+            <div class="input-group">
+                <label>الجرام (GSM):</label>
+                <input type="number" id="t2-gsm" value="70">
+            </div>
+            <div class="input-group">
+                <label>المقاس 1 (سم):</label>
+                <input type="number" id="t2-dim1" value="70">
+            </div>
+            <div class="input-group">
+                <label>المقاس 2 (سم):</label>
+                <input type="number" id="t2-dim2" value="100">
+            </div>
+            <div class="input-group">
+                <label>الأفرخ الناتجة فعلياً:</label>
+                <input type="number" id="t2-actual" value="10000">
+            </div>
+            <div class="input-group">
+                <label>عدد الأفرخ بالرزمة:</label>
+                <input type="number" id="t2-ream" value="496">
+            </div>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-box">
+                <span>الأفرخ المتوقعة</span>
+                <strong id="res2-expected">0 فرخ</strong>
+            </div>
+            <div class="result-box">
+                <span>وزن الرزمة</span>
+                <strong id="res2-ream-weight">0 كجم</strong>
+            </div>
+            <div class="result-box">
+                <span>عدد الرزم</span>
+                <strong id="res2-reams-count">0 رزمة</strong>
+            </div>
+            <div class="result-box">
+                <span>العجز التشغيلي</span>
+                <strong id="res2-deficit" class="deficit-red">0 ك</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculateTab1() {
+        const sheets = parseFloat(document.getElementById('t1-sheets').value) || 0;
+        const gsm = parseFloat(document.getElementById('t1-gsm').value) || 0;
+        const dim1 = parseFloat(document.getElementById('t1-dim1').value) || 0;
+        const dim2 = parseFloat(document.getElementById('t1-dim2').value) || 0;
+        const rollWeight = parseFloat(document.getElementById('t1-roll').value) || 0;
+        const palletCap = parseFloat(document.getElementById('t1-pallet').value) || 0;
+
+        const netWeight = (sheets * gsm * dim1 * dim2) / 10000000;
+        const wasteWeight = netWeight * 1.03;
+        const rollsCount = rollWeight > 0 ? (netWeight / rollWeight) : 0;
+        const palletsCount = palletCap > 0 ? Math.ceil(sheets / palletCap) : 0;
+
+        document.getElementById('res1-net').innerText = netWeight.toFixed(2) + " كجم";
+        document.getElementById('res1-waste').innerText = wasteWeight.toFixed(2) + " كجم";
+        document.getElementById('res1-rolls').innerText = rollsCount.toFixed(2) + " بكرة";
+        document.getElementById('res1-pallets').innerText = palletsCount + " بالتة";
+    }
+
+    function calculateTab2() {
+        const roll = parseFloat(document.getElementById('t2-roll').value) || 0;
+        const gsm = parseFloat(document.getElementById('t2-gsm').value) || 0;
+        const dim1 = parseFloat(document.getElementById('t2-dim1').value) || 0;
+        const dim2 = parseFloat(document.getElementById('t2-dim2').value) || 0;
+        const actualSheets = parseFloat(document.getElementById('t2-actual').value) || 0;
+        const reamSheets = parseFloat(document.getElementById('t2-ream').value) || 0;
+
+        const divisor = (gsm * dim1 * dim2);
+        if (divisor > 0) {
+            const expected = Math.round((roll * 10000000) / divisor);
+            const reamWeight = (reamSheets * gsm * dim1 * dim2) / 10000000;
+            const reamsCount = reamSheets > 0 ? (actualSheets / reamSheets) : 0;
+            const actualProducedWeight = (actualSheets * gsm * dim1 * dim2) / 10000000;
+            const deficit = roll - actualProducedWeight;
+
+            document.getElementById('res2-expected').innerText = expected + " فرخ";
+            document.getElementById('res2-ream-weight').innerText = reamWeight.toFixed(2) + " كجم";
+            document.getElementById('res2-reams-count').innerText = reamsCount.toFixed(2) + " رزمة";
+            document.getElementById('res2-deficit').innerText = deficit.toFixed(2) + " ك";
+        }
+    }
+
+    // إضافة مستمعين للأحداث لتحديث النتائج تلقائياً عند الكتابة
+    document.querySelectorAll('#t1-sheets, #t1-gsm, #t1-dim1, #t1-dim2, #t1-roll, #t1-pallet').forEach(input => {
+        input.addEventListener('input', calculateTab1);
+    });
+
+    document.querySelectorAll('#t2-roll, #t2-gsm, #t2-dim1, #t2-dim2, #t2-actual, #t2-ream').forEach(input => {
+        input.addEventListener('input', calculateTab2);
+    });
+
+    // حساب مبدئي عند تحميل الصفحة
+    calculateTab1();
+    calculateTab2();
+</script>
+
+</body>
+</html>

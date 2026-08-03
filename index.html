@@ -3,140 +3,590 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>حاسبة مصنع الورق</title>
+    <meta name="theme-color" content="#0b0f19">
+    <meta name="description" content="حاسبة مصنع الورق الاحترافية - حساب الأوزان، الأفرخ، البكر والبالتات والطلبيات المتعددة">
+    <link rel="manifest" href="manifest.json">
+    <title>حاسبة مصنع الورق | Paper Calculator</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: #1a1b26;
-            color: #a9b1d6;
+        :root {
+            --bg-dark: #0b0f19;
+            --bg-card: rgba(17, 24, 39, 0.85);
+            --bg-card-hover: rgba(31, 41, 55, 0.95);
+            --bg-input: #111827;
+            --bg-sticky: rgba(15, 23, 42, 0.92);
+            --border-card: rgba(255, 255, 255, 0.08);
+            --border-focus: #38bdf8;
+            --accent-gold: #f59e0b;
+            --accent-gold-light: #fbbf24;
+            --accent-cyan: #38bdf8;
+            --accent-green: #34d399;
+            --accent-purple: #c084fc;
+            --accent-red: #f87171;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dim: #6b7280;
+            --font-family: 'Tajawal', 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --shadow-glow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.15);
+            --shadow-gold: 0 10px 30px -10px rgba(245, 158, 11, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
-        .container {
-            max-width: 1000px;
-            margin: auto;
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.06) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 40px;
+            direction: rtl;
         }
-        h1 {
+
+        /* --- STICKY TOP RESULTS BAR --- */
+        .sticky-top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--bg-sticky);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .sticky-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sticky-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--accent-gold-light);
+            white-space: nowrap;
+        }
+
+        .sticky-brand svg {
+            width: 22px;
+            height: 22px;
+            fill: var(--accent-gold);
+        }
+
+        .sticky-results-grid {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-grow: 1;
+            justify-content: flex-end;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: thin;
+        }
+
+        .sticky-results-grid::-webkit-scrollbar {
+            height: 4px;
+        }
+        .sticky-results-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .sticky-card {
+            background: rgba(17, 24, 39, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 6px 12px;
+            min-width: 120px;
             text-align: center;
-            color: #7aa2f7;
-            margin-bottom: 30px;
+            flex-shrink: 0;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s ease, border-color 0.2s ease;
         }
+
+        .sticky-card:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+        }
+
+        .sticky-card .lbl {
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+            white-space: nowrap;
+        }
+
+        .sticky-card .val {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            white-space: nowrap;
+        }
+
+        .sticky-card.gold .val {
+            color: var(--accent-gold-light);
+        }
+        .sticky-card.green .val {
+            color: var(--accent-green);
+        }
+        .sticky-card.red .val {
+            color: var(--accent-red);
+        }
+
+        /* --- MAIN LAYOUT CONTAINER --- */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* --- HEADER SECTION --- */
+        .app-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-top: 10px;
+        }
+
+        .header-title-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(56, 189, 248, 0.15));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            padding: 8px 20px;
+            border-radius: 30px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-title-badge svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--accent-gold);
+        }
+
+        .header-title-badge h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #f59e0b, #fbbf24, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .app-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* --- LUXURY CARDS --- */
         .card {
-            background-color: #24283b;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow-glow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-gold), var(--accent-cyan), var(--accent-purple));
+            opacity: 0.8;
+        }
+
         .card-header {
-            color: #9ece6a;
-            border-bottom: 2px solid #414868;
-            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--accent-gold-light);
+            font-size: 18px;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 14px;
             margin-bottom: 20px;
         }
+
+        .card-header svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--accent-gold);
+            flex-shrink: 0;
+        }
+
+        /* --- GRID & INPUT GROUPS --- */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
         }
+
         .input-group {
             display: flex;
             flex-direction: column;
+            gap: 6px;
         }
+
         label {
-            margin-bottom: 8px;
-            color: #c0caf5;
-            font-weight: bold;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        input {
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #414868;
-            background-color: #1f2335;
-            color: #c0caf5;
+
+        label .unit {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background-color: var(--bg-input);
+            color: #ffffff;
             font-family: inherit;
-            font-size: 18px;
+            font-size: 17px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
         }
-        input:focus {
+
+        input[type="number"]:focus, input[type="text"]:focus {
             outline: none;
-            border-color: #7aa2f7;
-            background-color: #292e42;
+            border-color: var(--accent-cyan);
+            background-color: rgba(30, 41, 59, 0.9);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.2);
         }
+
+        /* --- RESULTS GRID --- */
         .results-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-top: 22px;
         }
+
         .result-box {
-            background-color: #1f2335;
-            padding: 15px;
-            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(31, 41, 55, 0.7), rgba(17, 24, 39, 0.9));
+            padding: 16px;
+            border-radius: 12px;
             text-align: center;
-            border-left: 4px solid #bb9af7;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            position: relative;
+            transition: transform 0.2s ease, border-color 0.2s ease;
         }
+
+        .result-box:hover {
+            border-color: rgba(56, 189, 248, 0.3);
+            transform: translateY(-2px);
+        }
+
         .result-box span {
             display: block;
-            color: #7dcfff;
-            font-size: 14px;
-            margin-bottom: 5px;
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 6px;
+            font-weight: 500;
         }
+
         .result-box strong {
             font-size: 20px;
-            color: #ff9e64;
+            font-weight: 700;
+            color: var(--accent-gold-light);
+            display: block;
         }
-        .deficit-red {
-            color: #f7768e !important;
+
+        .result-box.cyan strong {
+            color: var(--accent-cyan);
+        }
+
+        .result-box.green strong {
+            color: var(--accent-green);
+        }
+
+        .result-box.purple strong {
+            color: var(--accent-purple);
+        }
+
+        .result-box.red strong {
+            color: var(--accent-red);
+        }
+
+        /* --- SECTION 3: MULTI-ITEM CALCULATOR STYLES --- */
+        .multi-item-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+
+        .multi-item-row {
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 0.8fr 0.8fr 0.8fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+            transition: background 0.2s ease;
+        }
+
+        .multi-item-row:hover {
+            background: rgba(31, 41, 55, 0.8);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--accent-gold), #d97706);
+            color: #000000;
+            font-weight: 700;
+            font-size: 14px;
+            font-family: inherit;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-gold);
+            transition: all 0.2s ease;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .btn-add:active {
+            transform: translateY(0);
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--accent-red);
+            border-radius: 8px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+        }
+
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.3);
+            color: #ffffff;
+        }
+
+        .row-result-badge {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            font-size: 14px;
+        }
+
+        /* --- FOOTER & COPYRIGHT --- */
+        .app-footer {
+            margin-top: 40px;
+            text-align: center;
+            padding: 20px 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(11, 15, 25, 0.9);
+            border-radius: 16px;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent-gold-light);
+            text-decoration: none;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .github-link:hover {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: var(--accent-gold);
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+        }
+
+        .github-link svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* Responsive Mobile tweaks */
+        @media (max-width: 768px) {
+            .multi-item-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            .multi-item-row .col-full {
+                grid-column: span 2;
+            }
+            .sticky-brand {
+                font-size: 13px;
+            }
+            .sticky-card {
+                min-width: 105px;
+                padding: 4px 8px;
+            }
+            .card {
+                padding: 16px;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🏭 نظام إدارة وحسابات الورق</h1>
+<!-- 1. BAR SHOWN AT TOP & FROZEN (STICKY RESULTS BAR) -->
+<div class="sticky-top-bar">
+    <div class="sticky-inner">
+        <div class="sticky-brand">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/></svg>
+            <span>حاسبة الورق</span>
+        </div>
+        <div class="sticky-results-grid">
+            <div class="sticky-card gold">
+                <span class="lbl">الوزن الصافي (1)</span>
+                <span class="val" id="res1-net-sticky">0 كجم</span>
+            </div>
+            <div class="sticky-card green">
+                <span class="lbl">بالهالك 3% (1)</span>
+                <span class="val" id="res1-waste-sticky">0 كجم</span>
+            </div>
+            <div class="sticky-card">
+                <span class="lbl">عدد البكر</span>
+                <span class="val" id="res1-rolls-sticky">0 بكرة</span>
+            </div>
+            <div class="sticky-card red">
+                <span class="lbl">العجز التشغيلي (2)</span>
+                <span class="val" id="res2-deficit-sticky">0 كجم</span>
+            </div>
+            <div class="sticky-card gold">
+                <span class="lbl">إجمالي الطلبات (3)</span>
+                <span class="val" id="res3-total-net-sticky">0 كجم</span>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <!-- القسم الأول -->
+<div class="container">
+    <!-- MAIN HEADER -->
+    <header class="app-header">
+        <div class="header-title-badge">
+            <svg viewBox="0 0 24 24"><path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3zm0 14.5c-2.48 0-4.5-2.02-4.5-4.5S9.52 8.5 12 8.5s4.5 2.02 4.5 4.5-2.02 4.5-4.5 4.5z"/></svg>
+            <h1>نظام إدارة وحسابات الورق</h1>
+        </div>
+        <div class="app-subtitle">الحاسبة الفنية المتقدمة لمصانع وخطوط إنتاج وتقطيع الورق</div>
+    </header>
+
+    <!-- SECTION 1 -->
     <div class="card">
-        <h2 class="card-header">1. من عدد الأفرخ إلى الوزن</h2>
+        <div class="card-header">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+            <span>1. من عدد الأفرخ إلى الوزن</span>
+        </div>
         <div class="grid">
             <div class="input-group">
                 <label>عدد الأفرخ المطلوب:</label>
-                <!-- استخدام inputmode="decimal" لإظهار كيبورد الأرقام فقط على الموبايل -->
                 <input type="number" id="t1-sheets" value="3000" inputmode="decimal">
             </div>
             <div class="input-group">
-                <label>الجرام (GSM):</label>
+                <label>الجرام <span class="unit">(GSM)</span>:</label>
                 <input type="number" id="t1-gsm" value="70" inputmode="decimal">
             </div>
             <div class="input-group">
-                <label>المقاس 1 (سم):</label>
+                <label>المقاس 1 <span class="unit">(سم)</span>:</label>
                 <input type="number" id="t1-dim1" value="70" inputmode="decimal">
             </div>
             <div class="input-group">
-                <label>المقاس 2 (سم):</label>
+                <label>المقاس 2 <span class="unit">(سم)</span>:</label>
                 <input type="number" id="t1-dim2" value="100" inputmode="decimal">
             </div>
             <div class="input-group">
-                <label>وزن البكرة (كجم):</label>
+                <label>وزن البكرة <span class="unit">(كجم)</span>:</label>
                 <input type="number" id="t1-roll" value="500" inputmode="decimal">
             </div>
             <div class="input-group">
-                <label>سعة البالتة (فرخ):</label>
+                <label>سعة البالتة <span class="unit">(فرخ)</span>:</label>
                 <input type="number" id="t1-pallet" value="10000" inputmode="decimal">
             </div>
         </div>
 
         <div class="results-grid">
-            <div class="result-box">
+            <div class="result-box cyan">
                 <span>الوزن الصافي</span>
                 <strong id="res1-net">0 كجم</strong>
             </div>
-            <div class="result-box">
+            <div class="result-box green">
                 <span>الوزن بالهالك (3%)</span>
                 <strong id="res1-waste">0 كجم</strong>
             </div>
-            <div class="result-box">
+            <div class="result-box purple">
                 <span>عدد البكر المطلوب</span>
                 <strong id="res1-rolls">0 بكرة</strong>
             </div>
@@ -147,24 +597,27 @@
         </div>
     </div>
 
-    <!-- القسم الثاني -->
+    <!-- SECTION 2 -->
     <div class="card">
-        <h2 class="card-header">2. الأفرخ المتوقعة من وزن البكرة</h2>
+        <div class="card-header">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+            <span>2. الأفرخ المتوقعة من وزن البكرة</span>
+        </div>
         <div class="grid">
             <div class="input-group">
-                <label>وزن البكرة (كجم):</label>
+                <label>وزن البكرة <span class="unit">(كجم)</span>:</label>
                 <input type="number" id="t2-roll" value="500" inputmode="decimal">
             </div>
             <div class="input-group">
-                <label>الجرام (GSM):</label>
+                <label>الجرام <span class="unit">(GSM)</span>:</label>
                 <input type="number" id="t2-gsm" value="70" inputmode="decimal">
             </div>
             <div class="input-group">
-                <label>المقاس 1 (سم):</label>
+                <label>المقاس 1 <span class="unit">(سم)</span>:</label>
                 <input type="number" id="t2-dim1" value="70" inputmode="decimal">
             </div>
             <div class="input-group">
-                <label>المقاس 2 (سم):</label>
+                <label>المقاس 2 <span class="unit">(سم)</span>:</label>
                 <input type="number" id="t2-dim2" value="100" inputmode="decimal">
             </div>
             <div class="input-group">
@@ -178,43 +631,111 @@
         </div>
 
         <div class="results-grid">
-            <div class="result-box">
+            <div class="result-box cyan">
                 <span>الأفرخ المتوقعة</span>
                 <strong id="res2-expected">0 فرخ</strong>
             </div>
-            <div class="result-box">
+            <div class="result-box green">
                 <span>وزن الرزمة</span>
                 <strong id="res2-ream-weight">0 كجم</strong>
             </div>
-            <div class="result-box">
+            <div class="result-box purple">
                 <span>عدد الرزم</span>
                 <strong id="res2-reams-count">0 رزمة</strong>
             </div>
-            <div class="result-box">
+            <div class="result-box red">
                 <span>العجز التشغيلي</span>
-                <strong id="res2-deficit" class="deficit-red">0 ك</strong>
+                <strong id="res2-deficit">0 كجم</strong>
             </div>
         </div>
     </div>
+
+    <!-- SECTION 3 (NEW MULTI-ITEM CALCULATOR) -->
+    <div class="card">
+        <div class="card-header">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span>3. حاسبة إجمالي أوزان المقاسات المتعددة (الطلبيات)</span>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">
+            أضف عدة أفرخ بمقاسات وأوزان جرامية مختلفة لحساب الوزن الصافي الإجمالي للطلبية دفعة واحدة:
+        </p>
+
+        <div id="multi-items-container">
+            <!-- Dynamic rows will be inserted here -->
+        </div>
+
+        <div style="margin-top: 15px; margin-bottom: 20px;">
+            <button class="btn-add" id="btn-add-row" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                <span>+ إضافة مقاس / بند جديد</span>
+            </button>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-box purple">
+                <span>إجمالي عدد الأفرخ</span>
+                <strong id="res3-total-sheets">0 فرخ</strong>
+            </div>
+            <div class="result-box cyan">
+                <span>إجمالي الوزن الصافي</span>
+                <strong id="res3-total-net">0 كجم</strong>
+            </div>
+            <div class="result-box green">
+                <span>إجمالي الوزن بالهالك (3%)</span>
+                <strong id="res3-total-waste">0 كجم</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER & COPYRIGHT -->
+    <footer class="app-footer">
+        <div class="footer-content">
+            <div>نظام إدارة وحسابات مصنع الورق &copy; 2026 جميع الحقوق محفوظة</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 6px;">
+                <span>تم التطوير بواسطة:</span>
+                <a href="https://github.com/mohamedmokhtar396" target="_blank" rel="noopener noreferrer" class="github-link">
+                    <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                    <span>Mohamed Mokhtar</span>
+                </a>
+                <a href="https://wa.me/201000975013" target="_blank" rel="noopener noreferrer" class="github-link" style="background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.3); color: var(--accent-green);">
+                    <svg viewBox="0 0 24 24" style="fill: var(--accent-green);"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    <span>01000975013</span>
+                </a>
+            </div>
+        </div>
+    </footer>
 </div>
 
 <script>
-    // دالة لاسترجاع البيانات المحفوظة عند فتح الصفحة
+    // Register Service Worker for Offline Mode
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(err => {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+    }
+
+    // Load saved data for Section 1 and Section 2
     function loadSavedData() {
-        const inputs = document.querySelectorAll('input[type="number"]');
+        const inputs = document.querySelectorAll('input[type="number"], input[type="text"]');
         inputs.forEach(input => {
-            const savedValue = localStorage.getItem(input.id);
-            if (savedValue !== null) {
-                input.value = savedValue;
+            if (input.id) {
+                const savedValue = localStorage.getItem(input.id);
+                if (savedValue !== null && savedValue !== '') {
+                    input.value = savedValue;
+                }
             }
         });
     }
 
-    // دالة لحفظ البيانات فور تعديلها
     function saveInputData(event) {
-        localStorage.setItem(event.target.id, event.target.value);
+        if (event.target.id) {
+            localStorage.setItem(event.target.id, event.target.value);
+        }
     }
 
+    // --- CALCULATIONS SECTION 1 ---
     function calculateTab1() {
         const sheets = parseFloat(document.getElementById('t1-sheets').value) || 0;
         const gsm = parseFloat(document.getElementById('t1-gsm').value) || 0;
@@ -228,12 +749,23 @@
         const rollsCount = rollWeight > 0 ? (netWeight / rollWeight) : 0;
         const palletsCount = palletCap > 0 ? Math.ceil(sheets / palletCap) : 0;
 
-        document.getElementById('res1-net').innerText = netWeight.toFixed(2) + " كجم";
-        document.getElementById('res1-waste').innerText = wasteWeight.toFixed(2) + " كجم";
-        document.getElementById('res1-rolls').innerText = rollsCount.toFixed(2) + " بكرة";
-        document.getElementById('res1-pallets').innerText = palletsCount + " بالتة";
+        const netText = netWeight.toFixed(2) + " كجم";
+        const wasteText = wasteWeight.toFixed(2) + " كجم";
+        const rollsText = rollsCount.toFixed(2) + " بكرة";
+        const palletsText = palletsCount + " بالتة";
+
+        document.getElementById('res1-net').innerText = netText;
+        document.getElementById('res1-waste').innerText = wasteText;
+        document.getElementById('res1-rolls').innerText = rollsText;
+        document.getElementById('res1-pallets').innerText = palletsText;
+
+        // Update Sticky Top Bar
+        document.getElementById('res1-net-sticky').innerText = netText;
+        document.getElementById('res1-waste-sticky').innerText = wasteText;
+        document.getElementById('res1-rolls-sticky').innerText = rollsText;
     }
 
+    // --- CALCULATIONS SECTION 2 ---
     function calculateTab2() {
         const roll = parseFloat(document.getElementById('t2-roll').value) || 0;
         const gsm = parseFloat(document.getElementById('t2-gsm').value) || 0;
@@ -253,18 +785,196 @@
             document.getElementById('res2-expected').innerText = expected + " فرخ";
             document.getElementById('res2-ream-weight').innerText = reamWeight.toFixed(2) + " كجم";
             document.getElementById('res2-reams-count').innerText = reamsCount.toFixed(2) + " رزمة";
-            document.getElementById('res2-deficit').innerText = deficit.toFixed(2) + " ك";
+
+            const deficitEl = document.getElementById('res2-deficit');
+            const deficitCard = deficitEl ? deficitEl.closest('.result-box') : null;
+            const stickyDeficitCard = document.getElementById('res2-deficit-sticky') ? document.getElementById('res2-deficit-sticky').closest('.sticky-card') : null;
+
+            if (deficit < 0) {
+                // Negative deficit = surplus paper produced -> GREEN background!
+                const text = deficit.toFixed(2) + " كجم (فائض)";
+                deficitEl.innerText = text;
+                if (deficitCard) deficitCard.className = "result-box green";
+                if (stickyDeficitCard) stickyDeficitCard.className = "sticky-card green";
+                document.getElementById('res2-deficit-sticky').innerText = text;
+            } else {
+                // Positive deficit = shortage -> RED background!
+                const text = deficit.toFixed(2) + " كجم";
+                deficitEl.innerText = text;
+                if (deficitCard) deficitCard.className = "result-box red";
+                if (stickyDeficitCard) stickyDeficitCard.className = "sticky-card red";
+                document.getElementById('res2-deficit-sticky').innerText = text;
+            }
         }
     }
 
-    // إعداد الأحداث (Event Listeners) لكل المدخلات
-    document.querySelectorAll('input[type="number"]').forEach(input => {
-        // تفريغ الخانة بمجرد الضغط عليها
-        input.addEventListener('focus', function() {
-            this.value = '';
+    // --- CALCULATIONS SECTION 3 (MULTI-ITEM CALCULATOR) ---
+    let multiItems = [];
+
+    function initMultiItems() {
+        const saved = localStorage.getItem('t3_multi_items');
+        if (saved) {
+            try {
+                multiItems = JSON.parse(saved);
+            } catch (e) {
+                multiItems = [];
+            }
+        }
+        if (!multiItems || multiItems.length === 0) {
+            // Default initial items
+            multiItems = [
+                { id: Date.now(), name: 'مقاس 1', sheets: 3000, gsm: 70, dim1: 70, dim2: 100 }
+            ];
+        }
+        renderMultiItems();
+    }
+
+    function saveMultiItems() {
+        localStorage.setItem('t3_multi_items', JSON.stringify(multiItems));
+    }
+
+    function renderMultiItems() {
+        const container = document.getElementById('multi-items-container');
+        container.innerHTML = '';
+
+        multiItems.forEach((item, index) => {
+            const itemWeight = (item.sheets * item.gsm * item.dim1 * item.dim2) / 10000000;
+            
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'multi-item-row';
+            rowDiv.innerHTML = `
+                <div class="input-group col-full">
+                    <label>اسم المقاس / البيان:</label>
+                    <input type="text" class="m-name" data-id="${item.id}" value="${item.name || ''}" placeholder="مثال: غلاف، كتاب">
+                </div>
+                <div class="input-group">
+                    <label>عدد الأفرخ:</label>
+                    <input type="number" class="m-sheets" data-id="${item.id}" value="${item.sheets}" inputmode="decimal">
+                </div>
+                <div class="input-group">
+                    <label>الجرام (GSM):</label>
+                    <input type="number" class="m-gsm" data-id="${item.id}" value="${item.gsm}" inputmode="decimal">
+                </div>
+                <div class="input-group">
+                    <label>مقاس 1 (سم):</label>
+                    <input type="number" class="m-dim1" data-id="${item.id}" value="${item.dim1}" inputmode="decimal">
+                </div>
+                <div class="input-group">
+                    <label>مقاس 2 (سم):</label>
+                    <input type="number" class="m-dim2" data-id="${item.id}" value="${item.dim2}" inputmode="decimal">
+                </div>
+                <div class="input-group">
+                    <label>الوزن الصافي:</label>
+                    <div class="row-result-badge">${itemWeight.toFixed(2)} كجم</div>
+                </div>
+                <div class="input-group" style="justify-content: flex-end;">
+                    <button type="button" class="btn-delete" onclick="removeMultiItem(${item.id})">حذف</button>
+                </div>
+            `;
+            container.appendChild(rowDiv);
         });
 
-        // حفظ الرقم الجديد وإعادة الحساب فور الكتابة
+        attachMultiItemEvents();
+        calculateMultiItemsTotal();
+    }
+
+    function attachMultiItemEvents() {
+        const container = document.getElementById('multi-items-container');
+        const inputs = container.querySelectorAll('input');
+
+        inputs.forEach(input => {
+            // Auto-select text on focus (does NOT delete values on mobile!)
+            input.addEventListener('focus', function() {
+                this.select();
+            });
+
+            input.addEventListener('input', function() {
+                const id = parseInt(this.getAttribute('data-id'));
+                const item = multiItems.find(i => i.id === id);
+                if (item) {
+                    if (this.classList.contains('m-name')) item.name = this.value;
+                    if (this.classList.contains('m-sheets')) item.sheets = parseFloat(this.value) || 0;
+                    if (this.classList.contains('m-gsm')) item.gsm = parseFloat(this.value) || 0;
+                    if (this.classList.contains('m-dim1')) item.dim1 = parseFloat(this.value) || 0;
+                    if (this.classList.contains('m-dim2')) item.dim2 = parseFloat(this.value) || 0;
+                    
+                    // Update single row's net weight badge dynamically without re-rendering DOM!
+                    const rowDiv = this.closest('.multi-item-row');
+                    if (rowDiv) {
+                        const itemWeight = (item.sheets * item.gsm * item.dim1 * item.dim2) / 10000000;
+                        const badge = rowDiv.querySelector('.row-result-badge');
+                        if (badge) {
+                            badge.innerText = itemWeight.toFixed(2) + " كجم";
+                        }
+                    }
+
+                    saveMultiItems();
+                    calculateMultiItemsTotal();
+                }
+            });
+        });
+    }
+
+    function addMultiItem() {
+        const newId = Date.now();
+        multiItems.push({
+            id: newId,
+            name: `مقاس ${multiItems.length + 1}`,
+            sheets: 1000,
+            gsm: 70,
+            dim1: 70,
+            dim2: 100
+        });
+        saveMultiItems();
+        renderMultiItems();
+    }
+
+    function removeMultiItem(id) {
+        if (multiItems.length <= 1) {
+            alert('يجب الإبقاء على بند واحد على الأقل في القائمة.');
+            return;
+        }
+        multiItems = multiItems.filter(i => i.id !== id);
+        saveMultiItems();
+        renderMultiItems();
+    }
+
+    function calculateMultiItemsTotal() {
+        let totalSheets = 0;
+        let totalNetWeight = 0;
+
+        multiItems.forEach(item => {
+            const sheets = item.sheets || 0;
+            const gsm = item.gsm || 0;
+            const dim1 = item.dim1 || 0;
+            const dim2 = item.dim2 || 0;
+            const netWeight = (sheets * gsm * dim1 * dim2) / 10000000;
+
+            totalSheets += sheets;
+            totalNetWeight += netWeight;
+        });
+
+        const totalWasteWeight = totalNetWeight * 1.03;
+
+        const netTons = (totalNetWeight / 1000).toFixed(3);
+        const wasteTons = (totalWasteWeight / 1000).toFixed(3);
+
+        document.getElementById('res3-total-sheets').innerText = totalSheets.toLocaleString('ar-EG') + " فرخ";
+        document.getElementById('res3-total-net').innerText = `${totalNetWeight.toFixed(2)} كجم (${netTons} طن)`;
+        document.getElementById('res3-total-waste').innerText = `${totalWasteWeight.toFixed(2)} كجم (${wasteTons} طن)`;
+
+        // Update Sticky Top Bar
+        document.getElementById('res3-total-net-sticky').innerText = totalNetWeight.toFixed(1) + " كجم";
+    }
+
+    // Attach listeners to standard static inputs (Sections 1 & 2)
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        // Highlight input content on focus for fast mobile editing without clearing
+        input.addEventListener('focus', function() {
+            this.select();
+        });
+
+        // Save & recalculate on typing
         input.addEventListener('input', function(e) {
             saveInputData(e);
             calculateTab1();
@@ -272,10 +982,13 @@
         });
     });
 
-    // تحميل البيانات المحفوظة بمجرد فتح الصفحة، ثم إجراء الحسابات
+    document.getElementById('btn-add-row').addEventListener('click', addMultiItem);
+
+    // Initial boot
     loadSavedData();
     calculateTab1();
     calculateTab2();
+    initMultiItems();
 </script>
 
 </body>

@@ -498,6 +498,77 @@
                 padding: 16px;
             }
         }
+
+        /* CALCULATOR MODAL STYLES */
+        .floating-calc-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, var(--accent-gold), #d97706);
+            color: #000;
+            border: none;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        .floating-calc-btn:hover { transform: scale(1.1); }
+        .floating-calc-btn svg { width: 28px; height: 28px; fill: #000; }
+
+        .calc-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .calc-content {
+            background: var(--bg-card);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 300px;
+            padding: 20px;
+            box-shadow: var(--shadow-glow);
+            direction: ltr;
+        }
+        .calc-header {
+            display: flex; justify-content: space-between; align-items: center;
+            color: var(--text-main); margin-bottom: 15px; direction: rtl; font-weight: bold;
+        }
+        .calc-close {
+            background: none; border: none; color: var(--accent-red); font-size: 24px; cursor: pointer;
+        }
+        .calc-display {
+            width: 100%; height: 50px; background: #0b0f19; border: 1px solid var(--border-card);
+            border-radius: 8px; margin-bottom: 15px; text-align: right; font-size: 22px;
+            color: var(--accent-cyan); padding: 10px; font-family: monospace; outline: none;
+        }
+        .calc-keys {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+        }
+        .calc-keys button {
+            height: 45px; border-radius: 8px; border: none; font-size: 20px; font-weight: bold;
+            background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; transition: 0.2s;
+        }
+        .calc-keys button:active { transform: scale(0.95); background: rgba(255,255,255,0.15); }
+        .calc-keys .calc-op { background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); }
+        .calc-keys .calc-btn-eq { grid-column: span 4; background: rgba(245, 158, 11, 0.2); color: var(--accent-gold-light); }
+        .calc-btn-insert {
+            width: 100%; height: 45px; margin-top: 12px; border-radius: 8px; border: none;
+            background: var(--accent-green); color: #000; font-size: 15px; font-weight: bold;
+            cursor: pointer; transition: 0.2s; font-family: var(--font-family); direction: rtl;
+        }
+        .calc-btn-insert:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
@@ -989,7 +1060,109 @@
     calculateTab1();
     calculateTab2();
     initMultiItems();
+
+    // --- CALCULATOR LOGIC ---
+    let lastFocusedInput = null;
+    let calcExpression = "";
+
+    // Track the last focused input globally
+    document.addEventListener('focusin', function(e) {
+        if (e.target.tagName === 'INPUT' && (e.target.type === 'number' || e.target.type === 'text')) {
+            lastFocusedInput = e.target;
+        }
+    });
+
+    function openCalc() {
+        document.getElementById('calc-modal').style.display = 'flex';
+        calcExpression = "";
+        document.getElementById('calc-display').value = "";
+    }
+
+    function closeCalc() {
+        document.getElementById('calc-modal').style.display = 'none';
+    }
+
+    function calcPress(val) {
+        if (val === 'C') {
+            calcExpression = "";
+        } else {
+            calcExpression += val;
+        }
+        document.getElementById('calc-display').value = calcExpression;
+    }
+
+    function calcEvaluate() {
+        try {
+            const cleanStr = calcExpression.replace(/[^-()\d/*+.]/g, '');
+            if (cleanStr) {
+                const result = new Function('return ' + cleanStr)();
+                if (result !== undefined && !isNaN(result)) {
+                    // Limit decimals to 4 max to avoid floating point issues
+                    calcExpression = String(Math.round(result * 10000) / 10000);
+                    document.getElementById('calc-display').value = calcExpression;
+                }
+            }
+        } catch (e) {
+            document.getElementById('calc-display').value = "خطأ";
+            calcExpression = "";
+        }
+    }
+
+    function insertCalcResult() {
+        calcEvaluate();
+        const result = document.getElementById('calc-display').value;
+        if (result && result !== "خطأ") {
+            if (lastFocusedInput) {
+                lastFocusedInput.value = result;
+                // trigger input event so calculations run and data saves
+                lastFocusedInput.dispatchEvent(new Event('input', { bubbles: true }));
+                closeCalc();
+            } else {
+                alert('يرجى تحديد (الضغط على) الخانة المراد إدراج الرقم بها أولاً.');
+            }
+        }
+    }
 </script>
+
+<!-- CALCULATOR MODAL DOM -->
+<div id="calc-modal" class="calc-modal">
+    <div class="calc-content">
+        <div class="calc-header">
+            <span>آلة حاسبة ذكية</span>
+            <button type="button" class="calc-close" onclick="closeCalc()">×</button>
+        </div>
+        <input type="text" id="calc-display" class="calc-display" readonly>
+        <div class="calc-keys">
+            <button type="button" onclick="calcPress('7')">7</button>
+            <button type="button" onclick="calcPress('8')">8</button>
+            <button type="button" onclick="calcPress('9')">9</button>
+            <button type="button" class="calc-op" onclick="calcPress('/')">÷</button>
+            
+            <button type="button" onclick="calcPress('4')">4</button>
+            <button type="button" onclick="calcPress('5')">5</button>
+            <button type="button" onclick="calcPress('6')">6</button>
+            <button type="button" class="calc-op" onclick="calcPress('*')">×</button>
+            
+            <button type="button" onclick="calcPress('1')">1</button>
+            <button type="button" onclick="calcPress('2')">2</button>
+            <button type="button" onclick="calcPress('3')">3</button>
+            <button type="button" class="calc-op" onclick="calcPress('-')">-</button>
+            
+            <button type="button" onclick="calcPress('0')">0</button>
+            <button type="button" onclick="calcPress('.')">.</button>
+            <button type="button" class="calc-op" onclick="calcPress('C')">C</button>
+            <button type="button" class="calc-op" onclick="calcPress('+')">+</button>
+            
+            <button type="button" class="calc-btn-eq" onclick="calcEvaluate()">=</button>
+        </div>
+        <button type="button" class="calc-btn-insert" onclick="insertCalcResult()">إدراج في الخانة المحددة (✔)</button>
+    </div>
+</div>
+
+<!-- FLOATING BTN -->
+<button class="floating-calc-btn" onclick="openCalc()" title="فتح الآلة الحاسبة">
+    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 16H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V9h10v2zm0-4H7V5h10v2z"/></svg>
+</button>
 
 </body>
 </html>

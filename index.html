@@ -535,40 +535,63 @@
             background: var(--bg-card);
             border: 1px solid var(--accent-cyan);
             border-radius: 16px;
-            width: 90%;
-            max-width: 300px;
-            padding: 20px;
+            width: 94%;
+            max-width: 360px;
+            padding: 24px 20px;
             box-shadow: var(--shadow-glow);
             direction: ltr;
         }
         .calc-header {
             display: flex; justify-content: space-between; align-items: center;
-            color: var(--text-main); margin-bottom: 15px; direction: rtl; font-weight: bold;
+            color: var(--text-main); margin-bottom: 20px; direction: rtl; font-weight: bold; font-size: 18px;
         }
         .calc-close {
-            background: none; border: none; color: var(--accent-red); font-size: 24px; cursor: pointer;
+            background: none; border: none; color: var(--accent-red); font-size: 28px; cursor: pointer; padding: 0 10px;
         }
         .calc-display {
-            width: 100%; height: 50px; background: #0b0f19; border: 1px solid var(--border-card);
-            border-radius: 8px; margin-bottom: 15px; text-align: right; font-size: 22px;
-            color: var(--accent-cyan); padding: 10px; font-family: monospace; outline: none;
+            width: 100%; height: 60px; background: #0b0f19; border: 1px solid var(--border-card);
+            border-radius: 8px; margin-bottom: 18px; text-align: right; font-size: 26px;
+            color: var(--accent-cyan); padding: 10px 15px; font-family: monospace; outline: none;
         }
         .calc-keys {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
         }
         .calc-keys button {
-            height: 45px; border-radius: 8px; border: none; font-size: 20px; font-weight: bold;
+            height: 55px; border-radius: 10px; border: none; font-size: 22px; font-weight: bold;
             background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; transition: 0.2s;
         }
         .calc-keys button:active { transform: scale(0.95); background: rgba(255,255,255,0.15); }
-        .calc-keys .calc-op { background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); }
-        .calc-keys .calc-btn-eq { grid-column: span 4; background: rgba(245, 158, 11, 0.2); color: var(--accent-gold-light); }
+        .calc-keys .calc-op { background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); font-size: 24px; }
+        .calc-keys .calc-btn-eq { grid-column: span 4; background: rgba(245, 158, 11, 0.2); color: var(--accent-gold-light); height: 50px; }
         .calc-btn-insert {
-            width: 100%; height: 45px; margin-top: 12px; border-radius: 8px; border: none;
-            background: var(--accent-green); color: #000; font-size: 15px; font-weight: bold;
+            width: 100%; height: 55px; margin-top: 15px; border-radius: 10px; border: none;
+            background: var(--accent-green); color: #000; font-size: 16px; font-weight: bold;
             cursor: pointer; transition: 0.2s; font-family: var(--font-family); direction: rtl;
         }
         .calc-btn-insert:active { transform: scale(0.98); }
+
+        /* INLINE CALCULATOR BUTTON */
+        .inline-calc-btn {
+            position: absolute;
+            left: 10px;
+            bottom: 8px;
+            width: 34px;
+            height: 34px;
+            background: var(--bg-sticky);
+            border: 1px solid var(--accent-gold);
+            border-radius: 8px;
+            color: #fff;
+            display: none; /* Shown dynamically via JS */
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        .input-group {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -1064,12 +1087,36 @@
     // --- CALCULATOR LOGIC ---
     let lastFocusedInput = null;
     let calcExpression = "";
+    
+    // Create inline calculator button
+    const inlineCalcBtn = document.createElement('button');
+    inlineCalcBtn.className = 'inline-calc-btn';
+    inlineCalcBtn.innerHTML = '🧮';
+    inlineCalcBtn.type = 'button';
+    inlineCalcBtn.tabIndex = -1;
+    // Use pointerdown/touchstart to prevent input blur before opening
+    inlineCalcBtn.addEventListener('mousedown', function(e) { e.preventDefault(); openCalc(); });
+    inlineCalcBtn.addEventListener('touchstart', function(e) { e.preventDefault(); openCalc(); }, {passive: false});
 
-    // Track the last focused input globally
+    // Track the last focused input globally and show inline button
     document.addEventListener('focusin', function(e) {
-        if (e.target.tagName === 'INPUT' && (e.target.type === 'number' || e.target.type === 'text')) {
+        if (e.target.tagName === 'INPUT' && (e.target.type === 'number' || e.target.type === 'text') && !e.target.classList.contains('m-name') && !e.target.classList.contains('calc-display')) {
             lastFocusedInput = e.target;
+            const group = e.target.closest('.input-group');
+            if (group) {
+                group.appendChild(inlineCalcBtn);
+                inlineCalcBtn.style.display = 'flex';
+            }
         }
+    });
+    
+    document.addEventListener('focusout', function(e) {
+        // hide the inline button slightly after blur so clicks register
+        setTimeout(() => {
+            if (document.activeElement !== inlineCalcBtn) {
+                inlineCalcBtn.style.display = 'none';
+            }
+        }, 150);
     });
 
     function openCalc() {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paper-calculator-v1';
+const CACHE_NAME = 'paper-calculator-v2';
 const ASSETS = [
   './',
   './index.html',
